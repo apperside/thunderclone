@@ -15,11 +15,9 @@
 	<img src="https://img.shields.io/github/languages/count/apperside/dockerify.ai?style=flat&color=0080ff" alt="repo-language-count">
 <p>
 
-# Thunderclone ⚡
-
 ![version 1.0.0](https://img.shields.io/badge/version-1.0.0-blue.svg) ![license MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-Thunderclone's goal is to run locally any github repository with just the click of a button, like if the repo was brought on your machine by a thunder! 😎
+Thunderclone's goal is to allow you tu run locally any github repository with just the click of a button, like if the repo was brought on your machine by a thunder! 😎
 
 The idea is the following:
 
