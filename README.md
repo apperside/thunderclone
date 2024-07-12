@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="https://cdn-icons-png.flaticon.com/512/6295/6295417.png" width="100" />
+  <img src="https://github.com/user-attachments/assets/2dc5f9cd-1471-41af-b3fc-db916c1dff84" width="100" />
+
 </p>
 <p align="center">
-    <h1 align="center">DOCKERIFY.AI</h1>
+    <h1 align="center">⚡ THUNDERCLONE ⚡</h1>
 </p>
 <p align="center">
-    <em>Dockerify.AI: generate docker and docker-compose files with just one command!</em>
+    <em>Instantly clone and run locally any github repository!</em>
 </p>
 <p align="center">
 	<img src="https://img.shields.io/github/license/apperside/dockerify.ai?style=flat&color=0080ff" alt="license">
@@ -18,7 +19,7 @@
 
 ![version 1.0.0](https://img.shields.io/badge/version-1.0.0-blue.svg) ![license MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-Thunderclone's goal is to allow you to click a button and run locally any github repository.
+Thunderclone's goal is to run locally any github repository with just the click of a button, like if the repo was brought on your machine by a thunder! 😎
 
 The idea is the following:
 
@@ -26,7 +27,7 @@ The idea is the following:
 
 - the headless electron app (which must be running locally) will listen to the extension and clone the repository in a folder of your choice
 
-- using AI, the app will try to understand the list of commands needed to run the project and should return a list of commands to run the project in json format
+- using AI, the app will try to understand the list of commands needed to run the project and return the list of commands in json format to be executed by the client electron app
 
 - the electron app will then run the commands
 
@@ -110,7 +111,7 @@ npm install
 
 3. Build the Electron app:
 
-npm run build
+npm start
 
 4. Install the Chrome extension:
 
