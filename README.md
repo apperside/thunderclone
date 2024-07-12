@@ -31,6 +31,11 @@ The idea is the following:
 
 > 👉 **READ CAREFULLY** 👈
 > This is a super early stage project, just the seed of an idea. The electron desktop app will run a local socket listener **completely unprotected** at the moment, so **there are security implications** running this app
+## 🛠️ Demo video
+
+
+https://github.com/user-attachments/assets/c89fcf28-a140-4b51-8e57-dc2e0709782f
+
 
 ## 🛠️ Components
 
