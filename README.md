@@ -139,7 +139,7 @@ npm start
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/yourusername/github-cloner/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/apperside/thunderclone/issues).
 
 ## 📝 License
 
