@@ -1,6 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2dc5f9cd-1471-41af-b3fc-db916c1dff84" width="100" />
-
+  <img src="https://github.com/user-attachments/assets/db354edc-416c-4403-bc46-1511c711b3cd" width="100" />
 </p>
 <p align="center">
     <h1 align="center">⚡ THUNDERCLONE ⚡</h1>
