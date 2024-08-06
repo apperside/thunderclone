@@ -22,7 +22,7 @@ The idea is the following:
 
 - a chrome extension will inject a button to the github repository page. When clicked, it will send a message to a local electron app
 
-- the headless electron app (which must be running locally) will listen to the extension and clone the repository in a folder of your choice
+- the electron based agent app (which must be running locally) will listen to the extension and clone the repository in a folder of your choice
 
 - using AI, the app will try to understand the list of commands needed to run the project and return the list of commands in json format to be executed by the client electron app
 
