@@ -1,24 +1,33 @@
+import crypto from "crypto";
 import { WebSocketServer } from "ws";
+import cacheUtils from "../../inMemoryCache";
+import logger from "../../logger";
 import notifications from "../notifications-utils";
 import socketMessageDispatcher from "./socketMessageDispatcher";
-import crypto from "crypto";
-import preferences from "../../preferences";
 
 let wss: WebSocketServer | undefined = undefined;
 
 // Add this function to verify the signature
+
 async function verifySignature(
   data: string,
   signature: string,
   secret: string
 ): Promise<boolean> {
-  const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(data);
-  const computedSignature = hmac.digest("hex");
-  return computedSignature === signature;
+  try {
+    logger.info("verify signature");
+    const hmac = crypto.createHmac("sha256", secret);
+    hmac.update(data);
+    const computedSignature = hmac.digest("hex");
+    logger.info(JSON.stringify({ computedSignature, signature }));
+    return computedSignature === signature;
+  } catch (err) {
+    logger.error("Error verifying signature", err);
+    return false;
+  }
 }
 
-function startService(secretKey: string) {
+function startService() {
   if (!wss) {
     wss = new WebSocketServer({ port: 3456 });
 
@@ -30,20 +39,18 @@ function startService(secretKey: string) {
           const parsedMessage = JSON.parse(message.toString());
           const { action, payload, signature } = parsedMessage;
 
-          const clonePath = preferences.preferencesPanel.value(
-            "cloning.cloneDirectory"
-          );
           // Verify the signature
           const dataToVerify = `${payload.url}|${payload.timestamp}`;
           const isValid = await verifySignature(
             dataToVerify,
             signature,
-            secretKey
+            cacheUtils.getPassword()
           );
 
           if (isValid) {
             socketMessageDispatcher(ws, message, false);
           } else {
+            notifications.showMessage("Error", "You entered the wrong password");
             console.error("Invalid signature");
             ws.send(JSON.stringify({ error: "Invalid signature" }));
           }

@@ -4,8 +4,8 @@
 
 
 let socketReady = false;
-function initializeWebSocket(secret) {
-  const ws = new WebSocket('ws://localhost:3456');
+const ws = new WebSocket('ws://localhost:3456');
+function initializeWebSocket() {
 
   ws.onopen = function () {
     console.log('WebSocket Client Connected');
@@ -37,7 +37,7 @@ function initializeWebSocket(secret) {
       tippy(newButton, {
         content: `
           <div>
-            <input type="text" id="tippyInput" placeholder="Enter branch name">
+            <input type="text" id="tippyInput" placeholder="Enter password">
             <button id="tippyCloneButton">Clone</button>
           </div>
         `,
@@ -61,14 +61,7 @@ function initializeWebSocket(secret) {
   }
 }
 
-chrome.storage.sync.get(['secretWord'], function (result) {
-  const secret = result.secretWord || "ciaociaociao";
-  if (secret) {
-    initializeWebSocket(secret);
-  } else {
-    console.error('Secret word not found in storage');
-  }
-});
+initializeWebSocket();
 
 async function createSignature(data, secret) {
   const encoder = new TextEncoder();
@@ -91,7 +84,7 @@ async function createSignature(data, secret) {
 
 function handleCloneClick(tippyInstance) {
   const inputElement = tippyInstance.popper.querySelector('#tippyInput');
-  const branchName = inputElement.value.trim();
+  const secret = inputElement.value.trim();
 
   if (!socketReady) {
     console.error('WebSocket is not connected');
@@ -103,14 +96,14 @@ function handleCloneClick(tippyInstance) {
 
   const timestamp = Date.now();
   const url = window.location.href;
-  const dataToSign = `${url}|${timestamp}|${branchName}`;
+  const dataToSign = `${url}|${timestamp}`;
   createSignature(dataToSign, secret).then((signature) => {
+    alert(signature);
     const message = JSON.stringify({
       action: 'clone-repo',
       payload: {
         url: url,
         timestamp: timestamp,
-        branchName: branchName,
       },
       signature: signature
     });

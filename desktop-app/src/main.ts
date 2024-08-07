@@ -12,9 +12,10 @@ import * as path from "path";
 import utils from "./utils";
 import preferences from "./preferences";
 import logger from "./logger";
+import cacheUtils from "./inMemoryCache";
 
 let tray: Tray | null = null;
-let secretKey: string | null = null;
+// let secretKey: string | null = null;
 
 function promptForPassword() {
   return new Promise<string>((resolve) => {
@@ -28,20 +29,21 @@ function promptForPassword() {
     });
 
     win.loadFile("src/password.html");
-    
-    ipcMain.once("set-password", (event, password) => {
+
+    ipcMain.handleOnce("set-password", async (event, password) => {
+      logger.info("Password set event received");
       if (password) {
         resolve(password);
-      } else {
-        app.quit();
+        // _password = password;
+        win.close();
+        return true;
       }
-      win.close();
+      return false;
     });
 
     win.on("closed", () => {
-      if (!secretKey) {
-        app.quit();
-      }
+      logger.info("Password window closed");
+      resolve("");
     });
   });
 }
@@ -61,7 +63,34 @@ function setupTray() {
 }
 
 app.on("ready", async () => {
-  secretKey = await promptForPassword();
+  logger.info("App ready event triggered");
   setupTray();
-  utils.networking.startService(secretKey);
+  try {
+    const password = await promptForPassword();
+    if (password) {
+      cacheUtils.setPassword(password);
+      logger.info("Starting service with secret key");
+      utils.networking.startService(password);
+    } else {
+      logger.warn("No password provided");
+    }
+  } catch (error) {
+    logger.error("Error during app initialization:", error);
+  }
+});
+
+app.on("window-all-closed", () => {
+  logger.info("All windows closed event triggered");
+  if (process.platform !== "darwin") {
+    // app.quit();
+  }
+});
+
+app.on("will-quit", () => {
+  logger.info("App will quit event triggered");
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught exception:", error);
+  dialog.showErrorBox("An error occurred", error.message);
 });
