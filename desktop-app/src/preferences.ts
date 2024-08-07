@@ -1,12 +1,6 @@
-import { app, Tray, Menu, nativeImage, ipcMain } from "electron";
+import { app, Menu } from "electron";
 // import Store from 'electron-store';
 import * as path from "path";
-import * as net from "net";
-import { exec } from "child_process";
-import { WebSocketServer } from "ws";
-import { Notification } from "electron";
-import winston from "winston";
-import { BrowserWindow } from "electron";
 //@ts-ignore
 import ElectronPreferences from "electron-preferences";
 export const preferencesPanel = new ElectronPreferences({

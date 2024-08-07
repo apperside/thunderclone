@@ -1,13 +1,14 @@
 import { spawn } from "child_process";
 import { WebSocket } from "ws";
 
-import { SocketPayloads } from "../socketMessageDispatcher";
-import utils from "../../index";
-import logger from "../../../logger";
-import { app } from "electron";
-import path from "path";
-import preferences from "../../../preferences";
+import { app, shell } from "electron";
 import fs from "fs";
+import path from "path";
+import logger from "../../../logger";
+import preferences from "../../../preferences";
+import utils from "../../index";
+import { SocketPayloads } from "../socketMessageDispatcher";
+
 const cloneRepoHandler = (
   payload: SocketPayloads["clone-repo"],
   ws: WebSocket
@@ -33,28 +34,42 @@ const cloneRepoHandler = (
   }
 
   utils.notifications.showMessage("Thunderclone", "Clone started ");
-  const finalPath = clonePath
-    ? path.join(clonePath, owner, repo)
-    : path.join(app.getPath("home"), ".thunderclone", owner, repo);
+
+  const basePath = clonePath || path.join(app.getPath("home"), ".thunderclone");
+  const finalPath = path.join(basePath, owner, repo);
+
+  // fire the clone command
   const ls = spawn("git", [
     "clone",
     `https://github.com/${owner}/${repo}`,
     `${finalPath}`,
   ]);
+
   ls.stdout.on("data", (data: any) => {
     logger.info(`stdout: ${data}`);
   });
+
+  const showInFolder = () => {
+    try {
+      shell.openPath(finalPath);
+      logger.info(`Showing item in folder: ${finalPath}`);
+    } catch (err) {
+      logger.error(`error: ${err}`);
+    }
+  };
   ls.on("close", (code: any) => {
     logger.info(`child process exited with code ${code}`);
     if (code === 0) {
       utils.notifications.showMessage(
         "Thunderclone",
-        "Repository cloned successfully"
+        "Repository cloned successfully",
+        showInFolder
       );
     } else {
       utils.notifications.showMessage(
         "Thunderclone",
-        "Repository clone failed with error code " + code + ""
+        "Repository clone failed with error code " + code + "",
+        showInFolder
       );
     }
   });

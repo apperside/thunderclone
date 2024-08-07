@@ -1,62 +1,95 @@
-const ws = new WebSocket('ws://localhost:3456');
+// const secret = result.secretWord | "ciaociaociao";
 
-let socketReady = false;
-ws.onopen = function () {
-  console.log('WebSocket Client Connected');
-  socketReady = true;
-};
-console.log('ws', ws);
-console.log('ws.on', ws.on);
 
-function addButton() {
-  // Find the "Code" button
-  const codeButton = Array.from(document.querySelectorAll('button')).find(
-    (button) => button.querySelector('span')?.innerText === 'Code'
-  );
-  if (codeButton) {
-    // Create a new button
-    const newButton = document.createElement('button');
-    newButton.innerText = 'Thunderclone';
-    newButton.style.marginLeft = '10px';
-    newButton.className = 'btn btn-sm btn-primary';
 
-    // Insert the new button next to the "Code" button
-    codeButton.parentNode.insertBefore(newButton, codeButton.nextSibling);
 
-    console.log('Custom button added next to the Code button');
-    // WebSocket connection
-    const socket = new WebSocket('ws://localhost:3456'); // Update with the correct WebSocket URL
+function initializeWebSocket(secret) {
+  const ws = new WebSocket('ws://localhost:3456');
 
-    // Event listener for WebSocket connection open
-    socket.addEventListener('open', function (event) {
-      console.log('WebSocket connection established');
-    });
+  let socketReady = false;
+  ws.onopen = function () {
+    console.log('WebSocket Client Connected');
+    socketReady = true;
+  };
 
-    // Event listener for WebSocket errors
-    socket.addEventListener('error', function (event) {
-      console.error('WebSocket error:', event);
-    });
+  ws.onerror = function (error) {
+    console.error('WebSocket Error:', error);
+  };
 
-    // Event listener for button click
-    newButton.onclick = function () {
-      const message = JSON.stringify({
-        action: 'clone-repo',
-        payload: { url: window.location.href },
-      });
-      ws.send(message);
-      console.log('Message sent to WebSocket:', message);
-    };
+  ws.onclose = function (event) {
+    console.log('WebSocket Closed:', event.code, event.reason);
+    socketReady = false;
+  };
+
+  function addButton() {
+    const codeButton = Array.from(document.querySelectorAll('button')).find(
+      (button) => button.querySelector('span')?.innerText === 'Code'
+    );
+    if (codeButton) {
+      const newButton = document.createElement('button');
+      newButton.innerText = 'Thunderclone';
+      newButton.style.marginLeft = '10px';
+      newButton.className = 'btn btn-sm btn-primary';
+
+      codeButton.parentNode.insertBefore(newButton, codeButton.nextSibling);
+
+      newButton.onclick = async function () {
+        if (!socketReady) {
+          console.error('WebSocket is not connected');
+          alert('Unable to connect to Thunderclone service. Please make sure the desktop app is running.');
+          return;
+        }
+
+        const timestamp = Date.now();
+        const url = window.location.href;
+        const dataToSign = `${url}|${timestamp}`;
+        const signature = await createSignature(dataToSign, secret);
+
+        const message = JSON.stringify({
+          action: 'clone-repo',
+          payload: {
+            url: url,
+            timestamp: timestamp,
+          },
+          signature: signature
+        });
+        ws.send(message);
+        console.log('Message sent to WebSocket:', message);
+      };
+    }
+  }
+
+  if (document.readyState !== 'loading') {
+    addButton();
+  } else {
+    document.addEventListener('DOMContentLoaded', addButton);
   }
 }
-console.log('content.js loaded', document.readyState);
-if (document.readyState !== 'loading') {
-  console.log('document is already ready, just execute code here');
-  addButton();
-} else {
-  document.addEventListener('DOMContentLoaded', function () {
-    console.log('document was not ready, place code here');
-    addButton();
-  });
-}
 
-console.log('content.js loaded');
+chrome.storage.sync.get(['secretWord'], function (result) {
+  const secret = result.secretWord || "ciaociaociao";
+  if (secret) {
+    initializeWebSocket(secret);
+  } else {
+    console.error('Secret word not found in storage');
+  }
+});
+
+async function createSignature(data, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(data)
+  );
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}

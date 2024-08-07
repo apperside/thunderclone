@@ -7,7 +7,9 @@ export type SocketPayloads = {
   "clone-repo": {
     url: string; // the full url, like https://github.com/owner/repo
   };
-  "other-action": {};
+  "other-action": {
+    action: string;
+  };
 };
 
 export type WebSocketCommand<T extends keyof SocketPayloads> = {
@@ -26,7 +28,9 @@ const handlersMap: {
   ) => void;
 } = {
   "clone-repo": cloneRepoHandler,
-  "other-action": () => {},
+  "other-action": () => {
+    logger.info("other-action");
+  },
 };
 
 const socketMessageDispatcher = (

@@ -3,18 +3,22 @@
   "name": "Thunderclone Extension",
   "version": "1.0",
   "description": "Adds a custom button to GitHub repository pages.",
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],
       "js": ["content.js"]
     }
   ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
   "icons": {
     "48": "icon48.png",
     "128": "icon128.png"
   }
 }
-
