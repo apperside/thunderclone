@@ -20,7 +20,7 @@ Thunderclone's goal is to allow you tu run locally any github repository with ju
 
 The idea is the following:
 
-- a chrome extension will inject a button to the github repository page. When clicked, it will send a message to a local electron app
+- a chrome extension will inject a button to the github repository page. When clicked, it will send a message to a desktop agent app
 
 - the electron based agent app (which must be running locally) will listen to the extension and clone the repository in a folder of your choice
 
