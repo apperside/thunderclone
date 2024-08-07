@@ -1,10 +1,41 @@
-import { app, Menu, nativeImage, Tray } from "electron";
+import { app, Menu, nativeImage, Tray, dialog, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 
 import utils from "./utils";
 import preferences from "./preferences";
 
 let tray: Tray | null = null;
+let secretKey: string | null = null;
+
+function promptForPassword() {
+  return new Promise<string>((resolve) => {
+    const win = new BrowserWindow({
+      frame: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+
+    win.loadFile('src/password.html');
+
+    ipcMain.once('set-password', (event, password) => {
+      if (password) {
+        resolve(password);
+      } else {
+        app.quit();
+      }
+      win.close();
+    });
+
+    win.on('closed', () => {
+      if (!secretKey) {
+        app.quit();
+      }
+    });
+  });
+}
 
 function setupTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, "icon.png"));
@@ -20,7 +51,8 @@ function setupTray() {
   tray.setContextMenu(contextMenu);
 }
 
-app.on("ready", () => {
+app.on("ready", async () => {
+  secretKey = await promptForPassword();
   setupTray();
-  utils.networking.startService();
+  utils.networking.startService(secretKey);
 });

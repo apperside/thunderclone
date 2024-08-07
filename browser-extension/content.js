@@ -3,10 +3,10 @@
 
 
 
+let socketReady = false;
 function initializeWebSocket(secret) {
   const ws = new WebSocket('ws://localhost:3456');
 
-  let socketReady = false;
   ws.onopen = function () {
     console.log('WebSocket Client Connected');
     socketReady = true;
@@ -33,29 +33,24 @@ function initializeWebSocket(secret) {
 
       codeButton.parentNode.insertBefore(newButton, codeButton.nextSibling);
 
-      newButton.onclick = async function () {
-        if (!socketReady) {
-          console.error('WebSocket is not connected');
-          alert('Unable to connect to Thunderclone service. Please make sure the desktop app is running.');
-          return;
-        }
-
-        const timestamp = Date.now();
-        const url = window.location.href;
-        const dataToSign = `${url}|${timestamp}`;
-        const signature = await createSignature(dataToSign, secret);
-
-        const message = JSON.stringify({
-          action: 'clone-repo',
-          payload: {
-            url: url,
-            timestamp: timestamp,
-          },
-          signature: signature
-        });
-        ws.send(message);
-        console.log('Message sent to WebSocket:', message);
-      };
+      // Initialize Tippy on the new button with HTML content
+      tippy(newButton, {
+        content: `
+          <div>
+            <input type="text" id="tippyInput" placeholder="Enter branch name">
+            <button id="tippyCloneButton">Clone</button>
+          </div>
+        `,
+        allowHTML: true,
+        interactive: true,
+        theme: 'light',
+        animation: 'scale',
+        trigger: 'click',
+        onShow: (instance) => {
+          const cloneButton = instance.popper.querySelector('#tippyCloneButton');
+          cloneButton.onclick = () => handleCloneClick(instance);
+        },
+      });
     }
   }
 
@@ -92,4 +87,39 @@ async function createSignature(data, secret) {
   return Array.from(new Uint8Array(signature))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+function handleCloneClick(tippyInstance) {
+  const inputElement = tippyInstance.popper.querySelector('#tippyInput');
+  const branchName = inputElement.value.trim();
+
+  if (!socketReady) {
+    console.error('WebSocket is not connected');
+    alert('Unable to connect to Thunderclone service. Please make sure the desktop app is running.');
+    return;
+  }
+
+  tippyInstance.setContent('Cloning repository...');
+
+  const timestamp = Date.now();
+  const url = window.location.href;
+  const dataToSign = `${url}|${timestamp}|${branchName}`;
+  createSignature(dataToSign, secret).then((signature) => {
+    const message = JSON.stringify({
+      action: 'clone-repo',
+      payload: {
+        url: url,
+        timestamp: timestamp,
+        branchName: branchName,
+      },
+      signature: signature
+    });
+    ws.send(message);
+    console.log('Message sent to WebSocket:', message);
+
+    tippyInstance.setContent('Repository cloning initiated!');
+    setTimeout(() => {
+      tippyInstance.hide();
+    }, 3000);
+  });
 }
