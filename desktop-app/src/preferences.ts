@@ -1,15 +1,98 @@
-import { app, Tray, Menu, nativeImage, ipcMain } from 'electron';
+import { app, Tray, Menu, nativeImage, ipcMain } from "electron";
 // import Store from 'electron-store';
-import * as path from 'path';
-import * as net from 'net';
-import { exec } from 'child_process';
-import { WebSocketServer } from 'ws';
-import { Notification } from 'electron';
-import winston from 'winston';
-import { BrowserWindow } from 'electron';
+import * as path from "path";
+import * as net from "net";
+import { exec } from "child_process";
+import { WebSocketServer } from "ws";
+import { Notification } from "electron";
+import winston from "winston";
+import { BrowserWindow } from "electron";
 //@ts-ignore
-import ElectronPreferences from 'electron-preferences';
+import ElectronPreferences from "electron-preferences";
+export const preferencesPanel = new ElectronPreferences({
+  config: {
+    debounce: 150, // debounce preference save settings event; 0 to disable
+  },
 
+  // Override default preference BrowserWindow values
+  browserWindowOverrides: {
+    /* ... */
+  },
+
+  // Create an optional menu bar
+  // menu: Menu.buildFromTemplate(/* ... */),
+
+  // Provide a custom CSS file, relative to your appPath.
+  css: "preference-styles.css",
+
+  // Preference file path. Where your preferences are saved (required)
+  dataStore: path.join(app.getPath("userData"), "preferences.json"),
+
+  // Preference default values
+  defaults: {
+    about: {
+      name: "Albert",
+    },
+  },
+  menu: Menu.buildFromTemplate([
+    {
+      label: "Window",
+      role: "window",
+      submenu: [
+        {
+          label: "Close",
+          accelerator: "CmdOrCtrl+W",
+          role: "close",
+        },
+      ],
+    },
+  ]),
+  // Preference sections visible to the UI
+  sections: [
+    {
+      id: "about",
+      label: "About You",
+      icon: "single-01", // See the list of available icons below
+      form: {
+        groups: [
+          {
+            label: "About You", // optional
+            fields: [
+              {
+                label: "Name",
+                key: "name",
+                type: "text",
+                help: "What is your name?",
+              },
+              // ...
+            ],
+          },
+          // ...
+        ],
+      },
+    },
+    {
+      id: "cloning",
+      label: "Cloning Settings",
+      icon: "folder-15",
+      form: {
+        groups: [
+          {
+            label: "Repository Clone Directory",
+            fields: [
+              {
+                label: "Clone Directory",
+                key: "cloneDirectory",
+                type: "directory",
+                help: "Select the directory where repositories will be cloned",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+});
 function openPreferences() {
   // const preferencesWindow = new BrowserWindow({
   //   width: 400,
@@ -27,95 +110,11 @@ function openPreferences() {
 
   // preferencesWindow.loadFile('preferences.html');
 
-  const preferences = new ElectronPreferences({
-    config: {
-      debounce: 150, // debounce preference save settings event; 0 to disable
-    },
-
-    // Override default preference BrowserWindow values
-    browserWindowOverrides: {
-      /* ... */
-    },
-
-    // Create an optional menu bar
-    // menu: Menu.buildFromTemplate(/* ... */),
-
-    // Provide a custom CSS file, relative to your appPath.
-    css: 'preference-styles.css',
-
-    // Preference file path. Where your preferences are saved (required)
-    dataStore: path.join(app.getPath('userData'), 'preferences.json'),
-
-    // Preference default values
-    defaults: {
-      about: {
-        name: 'Albert',
-      },
-    },
-    menu: Menu.buildFromTemplate([
-      {
-        label: 'Window',
-        role: 'window',
-        submenu: [
-          {
-            label: 'Close',
-            accelerator: 'CmdOrCtrl+W',
-            role: 'close',
-          },
-        ],
-      },
-    ]),
-    // Preference sections visible to the UI
-    sections: [
-      {
-        id: 'about',
-        label: 'About You',
-        icon: 'single-01', // See the list of available icons below
-        form: {
-          groups: [
-            {
-              label: 'About You', // optional
-              fields: [
-                {
-                  label: 'Name',
-                  key: 'name',
-                  type: 'text',
-                  help: 'What is your name?',
-                },
-                // ...
-              ],
-            },
-            // ...
-          ],
-        },
-      },
-      {
-        id: 'cloning',
-        label: 'Cloning Settings',
-        icon: 'folder-15',
-        form: {
-          groups: [
-            {
-              label: 'Repository Clone Directory',
-              fields: [
-                {
-                  label: 'Clone Directory',
-                  key: 'cloneDirectory',
-                  type: 'directory',
-                  help: 'Select the directory where repositories will be cloned',
-                },
-              ],
-            },
-          ],
-        },
-      },
-    ],
-  });
-
   // Show the preferences window on demand.
-  preferences.show();
+  preferencesPanel.show();
 }
 const preferences = {
+  preferencesPanel,
   openPreferences,
 };
 export default preferences;

@@ -42,7 +42,7 @@ const socketMessageDispatcher = (
     handlersMap[command](parsed.payload, ws);
   } catch (err) {
     logger.error("Error parsing message: " + message, err);
-    ws.send("Repository clone error");
+    ws.send("Repository clone error: " + err);
   }
 };
 
