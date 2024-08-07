@@ -1,10 +1,12 @@
 import tippy, { Instance, Props } from "tippy.js";
 import utils from "./utils";
 
-
 let socketReady = false;
-const ws = new WebSocket("ws://localhost:3456");
+let ws: WebSocket | null = null;
 
+/**
+ * Function which actually injects the button
+ */
 function addButton() {
   const codeButton = Array.from(document.querySelectorAll("button")).find(
     (button) => button.querySelector("span")?.innerText === "Code"
@@ -73,7 +75,7 @@ function handleCloneClick(tippyInstance: Instance<Props>) {
       },
       signature: signature,
     });
-    ws.send(message);
+    ws?.send(message);
     console.log("Message sent to WebSocket:", message);
 
     tippyInstance.setContent("Repository cloning initiated!");
@@ -83,7 +85,9 @@ function handleCloneClick(tippyInstance: Instance<Props>) {
   });
 }
 
-function initializeWebSocket() {
+function init() {
+  ws = new WebSocket("ws://localhost:3456");
+
   ws.onopen = function () {
     console.log("WebSocket Client Connected");
     socketReady = true;
@@ -105,4 +109,4 @@ function initializeWebSocket() {
   }
 }
 
-initializeWebSocket();
+export default init;
