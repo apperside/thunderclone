@@ -1,8 +1,17 @@
-import { app, Menu, nativeImage, Tray, dialog, BrowserWindow, ipcMain } from "electron";
+import {
+  app,
+  Menu,
+  nativeImage,
+  Tray,
+  dialog,
+  BrowserWindow,
+  ipcMain,
+} from "electron";
 import * as path from "path";
 
 import utils from "./utils";
 import preferences from "./preferences";
+import logger from "./logger";
 
 let tray: Tray | null = null;
 let secretKey: string | null = null;
@@ -14,13 +23,13 @@ function promptForPassword() {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
-      }
+        preload: path.join(__dirname, "preload.js"),
+      },
     });
 
-    win.loadFile('src/password.html');
-
-    ipcMain.once('set-password', (event, password) => {
+    win.loadFile("src/password.html");
+    
+    ipcMain.once("set-password", (event, password) => {
       if (password) {
         resolve(password);
       } else {
@@ -29,7 +38,7 @@ function promptForPassword() {
       win.close();
     });
 
-    win.on('closed', () => {
+    win.on("closed", () => {
       if (!secretKey) {
         app.quit();
       }
