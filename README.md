@@ -60,7 +60,50 @@ The browser extension enhances the GitHub experience by:
 
 - Sending clone requests to the Electron app via WebSocket
 
-## 🌟 Features overview
+## 🔐 Password Protection System
+
+Thunderclone implements a password protection system to enhance security when cloning repositories. This system ensures that only authorized users can initiate the cloning process. Here's how it works:
+
+### Desktop App Setup
+
+1. When you first launch the Thunderclone desktop app, you'll be prompted to set a password.
+2. This password is stored securely in the app's memory and is used to authenticate clone requests.
+
+### Chrome Extension
+
+1. The Chrome extension adds a "Thunderclone" button to GitHub repository pages.
+2. When you click this button, a small popup appears, asking for the password you set in the desktop app.
+
+### Cloning Process
+
+1. After entering the password in the Chrome extension popup, the extension creates a secure signature using the following information:
+   - The GitHub repository URL
+   - The current timestamp
+   - The entered password
+
+2. This signature, along with the repository URL and timestamp, is sent to the desktop app.
+
+3. The desktop app receives this information and verifies the signature using the stored password.
+
+4. If the signature is valid and the timestamp is recent, the desktop app proceeds with cloning the repository.
+
+5. If the signature is invalid or the timestamp is too old, the cloning request is rejected.
+
+### Security Benefits
+
+- The password is never transmitted directly between the extension and the desktop app.
+- The signature system prevents replay attacks, as each request has a unique timestamp.
+- Even if someone intercepts the communication, they can't clone repositories without knowing the password.
+
+### Important Notes
+
+- You'll need to enter this password each time you want to clone a repository using Thunderclone.
+- If you forget the password, you'll need to restart the desktop app and set a new password.
+- The password is not stored persistently, so it's reset when you close and reopen the desktop app.
+
+This system provides a balance between security and convenience, ensuring that your Thunderclone usage remains protected while still being user-friendly.
+
+## 🛠️ Features overview
 
 This is an high level overview of the features with their current status.
 
@@ -81,7 +124,7 @@ This is an high level overview of the features with their current status.
   - [x] Clicking the button call the extension which clones the repo
   - [ ] Customize button
   - [ ] Configuration panel
-  - [ ] Better error handling (eg: socket not connected)
+  - [x] Better error handling (eg: socket not connected)
 
 - 🔗 WebSocket communication between the extension and desktop app
 
