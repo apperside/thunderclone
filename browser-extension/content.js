@@ -82,6 +82,11 @@ async function createSignature(data, secret) {
     .join('');
 }
 
+/**
+ * In order to improve security, to clone a repository, the user must enter the secret word used to launch the desktop app.
+ * and the signature of the request is created using the HMAC algorithm with the secret word
+ * and the request is sent to the desktop app
+ */
 function handleCloneClick(tippyInstance) {
   const inputElement = tippyInstance.popper.querySelector('#tippyInput');
   const secret = inputElement.value.trim();
@@ -97,8 +102,8 @@ function handleCloneClick(tippyInstance) {
   const timestamp = Date.now();
   const url = window.location.href;
   const dataToSign = `${url}|${timestamp}`;
+
   createSignature(dataToSign, secret).then((signature) => {
-    alert(signature);
     const message = JSON.stringify({
       action: 'clone-repo',
       payload: {
