@@ -89,7 +89,26 @@ function openPreferences() {
           ],
         },
       },
-      // ...
+      {
+        id: 'cloning',
+        label: 'Cloning Settings',
+        icon: 'folder-15',
+        form: {
+          groups: [
+            {
+              label: 'Repository Clone Directory',
+              fields: [
+                {
+                  label: 'Clone Directory',
+                  key: 'cloneDirectory',
+                  type: 'directory',
+                  help: 'Select the directory where repositories will be cloned',
+                },
+              ],
+            },
+          ],
+        },
+      },
     ],
   });
 

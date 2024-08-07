@@ -1,13 +1,13 @@
-import { RawData, WebSocket } from 'ws';
+import { RawData, WebSocket } from "ws";
 
-import logger from '../../logger';
-import cloneRepoHandler from './socket-message-handlers/cloneRepo.handler.';
+import logger from "../../logger";
+import cloneRepoHandler from "./socket-message-handlers/cloneRepo.handler.";
 
 export type SocketPayloads = {
-  'clone-repo': {
+  "clone-repo": {
     url: string; // the full url, like https://github.com/owner/repo
   };
-  'other-action': {};
+  "other-action": {};
 };
 
 export type WebSocketCommand<T extends keyof SocketPayloads> = {
@@ -25,8 +25,8 @@ const handlersMap: {
     ws: WebSocket
   ) => void;
 } = {
-  'clone-repo': cloneRepoHandler,
-  'other-action': () => {},
+  "clone-repo": cloneRepoHandler,
+  "other-action": () => {},
 };
 
 const socketMessageDispatcher = (
@@ -35,14 +35,14 @@ const socketMessageDispatcher = (
   isBinary: boolean
 ) => {
   try {
-    logger.info('message recieved: ' + message, {});
+    logger.info("message recieved: " + message, {});
     const parsed = JSON.parse(message.toString()) as WebSocketCommand<any>;
     const command = parsed.action as keyof WebSocketCommandsMap;
 
     handlersMap[command](parsed.payload, ws);
   } catch (err) {
-    logger.error('Error parsing message: ' + message, err);
-    ws.send('Repository clone error');
+    logger.error("Error parsing message: " + message, err);
+    ws.send("Repository clone error");
   }
 };
 

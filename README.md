@@ -105,7 +105,7 @@ For now this project is just a repository with 2 separate folders each one conta
 
 git clone https://github.com/apperside/github-cloner.git
 
-cd thunder clone
+cd thunderclone
 
 2. Install dependencies:
 
