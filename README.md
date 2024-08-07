@@ -26,7 +26,7 @@ The idea is the following:
 
 - using AI, the app will try to understand the list of commands needed to run the project and return the list of commands in json format to be executed by the client electron app
 
-- the electron app will then run the commands
+- the desktop agent app will then run the commands
 
 > 👉 **READ CAREFULLY** 👈
 > This is a super early stage project, just the seed of an idea. The electron desktop app will run a local socket listener **completely unprotected** at the moment, so **there are security implications** running this app
