@@ -29,7 +29,10 @@ The idea is the following:
 - the desktop agent app will then run the commands
 
 > 👉 **READ CAREFULLY** 👈
-> This is a super early stage project, just the seed of an idea. The electron desktop app will run a local socket listener **completely unprotected** at the moment, so **there are security implications** running this app
+> This is a super early stage project, just the seed of an idea.
+> In order to mitigate security risks (of running a local websocket which clones locally an arbitrary repository), the agent app at the moment requires to enter a password to run.
+> This password is saved in memory and never stored anywhere, you can read more ahead about how it is used
+> 
 ## 🛠️ Demo video
 
 
