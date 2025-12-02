@@ -17,6 +17,17 @@
       ]
     }
   ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_icon": {
+      "48": "icon48.png",
+      "128": "icon128.png"
+    },
+    "default_title": "Thunderclone Settings"
+  },
   "icons": {
     "48": "icon48.png",
     "128": "icon128.png"

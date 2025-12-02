@@ -1,8 +1,22 @@
 import tippy, { Instance, Props } from "tippy.js";
-import utils from "./utils";
+
+const STORAGE_KEY = "thunderclone_auth_token";
 
 let socketReady = false;
 let ws: WebSocket | null = null;
+
+/**
+ * Get the stored authentication token from Chrome storage
+ */
+async function getStoredToken(): Promise<string | null> {
+  try {
+    const result = await chrome.storage.sync.get([STORAGE_KEY]);
+    return result[STORAGE_KEY] || null;
+  } catch (error) {
+    console.error("Error getting stored token:", error);
+    return null;
+  }
+}
 
 /**
  * Function which actually injects the button
@@ -19,87 +33,103 @@ function addButton() {
 
     codeButton.parentNode?.insertBefore(newButton, codeButton.nextSibling);
 
-    // Initialize Tippy on the new button with HTML content
-    tippy(newButton, {
-      content: `
-        <div>
-          <input type="text" id="tippyInput" placeholder="Enter password">
-          <button id="tippyCloneButton">Clone</button>
-        </div>
-      `,
-      allowHTML: true,
-      interactive: true,
+    // Initialize Tippy on the new button for status feedback
+    const tippyInstance = tippy(newButton, {
+      content: "Click to clone repository",
       theme: "light",
       animation: "scale",
-      trigger: "click",
-      onShow: (instance) => {
-        const cloneButton = instance.popper.querySelector("#tippyCloneButton");
-        if (cloneButton) {
-          (cloneButton as HTMLElement).onclick = () =>
-            handleCloneClick(instance);
-        }
-      },
+      trigger: "mouseenter",
     });
+
+    // Handle click on the button
+    newButton.addEventListener("click", () => handleCloneClick(tippyInstance));
   }
 }
 
 /**
- * In order to improve security, to clone a repository, the user must enter the secret word used to launch the desktop app.
- * and the signature of the request is created using the HMAC algorithm with the secret word
- * and the request is sent to the desktop app
+ * Handle the clone button click - uses stored token for authentication
  */
-function handleCloneClick(tippyInstance: Instance<Props>) {
-  const inputElement = tippyInstance.popper.querySelector("#tippyInput");
-  const secret = (inputElement as any)?.value?.trim();
-
+async function handleCloneClick(tippyInstance: Instance<Props>) {
+  // Check WebSocket connection
   if (!socketReady) {
-    console.error("WebSocket is not connected");
-    alert(
-      "Unable to connect to Thunderclone service. Please make sure the desktop app is running."
+    tippyInstance.setContent(
+      "Unable to connect to Thunderclone. Please make sure the desktop app is running."
     );
+    tippyInstance.show();
+    setTimeout(() => tippyInstance.hide(), 3000);
+    return;
+  }
+
+  // Get the stored token
+  const token = await getStoredToken();
+
+  if (!token) {
+    tippyInstance.setContent(
+      'No token configured. Click the Thunderclone extension icon to set up authentication.'
+    );
+    tippyInstance.show();
+    setTimeout(() => tippyInstance.hide(), 4000);
     return;
   }
 
   tippyInstance.setContent("Cloning repository...");
+  tippyInstance.show();
 
-  const timestamp = Date.now();
   const url = window.location.href;
-  const dataToSign = `${url}|${timestamp}`;
 
-  utils.createSignature(dataToSign, secret).then((signature) => {
-    const message = JSON.stringify({
-      action: "clone-repo",
-      payload: {
-        url: url,
-        timestamp: timestamp,
-      },
-      signature: signature,
-    });
-    ws?.send(message);
-    console.log("Message sent to WebSocket:", message);
-
-    tippyInstance.setContent("Repository cloning initiated!");
-    setTimeout(() => {
-      tippyInstance.hide();
-    }, 3000);
+  // Send the clone request with the token
+  const message = JSON.stringify({
+    action: "clone-repo",
+    payload: {
+      url: url,
+      timestamp: Date.now(),
+    },
+    token: token,
   });
+
+  ws?.send(message);
+  console.log("Clone request sent to Thunderclone");
+
+  tippyInstance.setContent("Clone request sent!");
+  setTimeout(() => {
+    tippyInstance.hide();
+  }, 2000);
 }
 
 function init() {
   ws = new WebSocket("ws://localhost:3456");
 
   ws.onopen = function () {
-    console.log("WebSocket Client Connected");
+    console.log("Thunderclone: WebSocket connected");
     socketReady = true;
   };
 
   ws.onerror = function (error) {
-    console.error("WebSocket Error:", error);
+    console.error("Thunderclone: WebSocket error:", error);
   };
 
   ws.onclose = function (event) {
-    console.log("WebSocket Closed:", event.code, event.reason);
+    console.log("Thunderclone: WebSocket closed:", event.code, event.reason);
     socketReady = false;
+
+    // Attempt to reconnect after 5 seconds
+    setTimeout(() => {
+      if (!socketReady) {
+        init();
+      }
+    }, 5000);
+  };
+
+  ws.onmessage = function (event) {
+    try {
+      const response = JSON.parse(event.data);
+      if (response.error) {
+        console.error("Thunderclone error:", response.error);
+        // Could show a notification to the user here
+      }
+    } catch (e) {
+      console.log("Thunderclone message:", event.data);
+    }
   };
 
   if (document.readyState !== "loading") {

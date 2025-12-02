@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 console.log("preload");
 contextBridge.exposeInMainWorld("electronAPI", {
-  setPassword: (password: string) =>
-    ipcRenderer.invoke("set-password", password),
+  onTokenReceived: (callback: (token: string) => void) => {
+    ipcRenderer.on("token-received", (event, token) => callback(token));
+  },
+  continueWithToken: () => ipcRenderer.invoke("continue-with-token"),
 });
