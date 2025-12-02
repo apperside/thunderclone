@@ -1,11 +1,11 @@
-let password = "";
+let token = "";
 let _isServiceRunning = false;
 
-const getPassword = () => {
-  return password;
+const getToken = () => {
+  return token;
 };
-const setPassword = (p: string) => {
-  password = p;
+const setToken = (t: string) => {
+  token = t;
 };
 
 const isServiceRunning = () => {
@@ -16,8 +16,8 @@ const setServiceRunning = (p: boolean) => {
 };
 
 const cacheUtils = {
-  getPassword,
-  setPassword,
+  getToken,
+  setToken,
   isServiceRunning,
   setServiceRunning,
 };

@@ -7,22 +7,22 @@ import socketMessageDispatcher from "./socketMessageDispatcher";
 
 let wss: WebSocketServer | undefined = undefined;
 
-// Add this function to verify the signature
-
-async function verifySignature(
-  data: string,
-  signature: string,
-  secret: string
-): Promise<boolean> {
+function verifyToken(providedToken: string): boolean {
+  const storedToken = cacheUtils.getToken();
+  if (!providedToken || !storedToken) {
+    return false;
+  }
+  // Use timing-safe comparison to prevent timing attacks
+  if (providedToken.length !== storedToken.length) {
+    return false;
+  }
   try {
-    logger.info("verify signature");
-    const hmac = crypto.createHmac("sha256", secret);
-    hmac.update(data);
-    const computedSignature = hmac.digest("hex");
-    logger.info(JSON.stringify({ computedSignature, signature }));
-    return computedSignature === signature;
+    return crypto.timingSafeEqual(
+      Buffer.from(providedToken),
+      Buffer.from(storedToken)
+    );
   } catch (err) {
-    logger.error("Error verifying signature", err);
+    logger.error("Error verifying token", err);
     return false;
   }
 }
@@ -37,22 +37,28 @@ function startService() {
       ws.on("message", async (message) => {
         try {
           const parsedMessage = JSON.parse(message.toString());
-          const { action, payload, signature } = parsedMessage;
+          const { action, payload, token } = parsedMessage;
 
-          // Verify the signature
-          const dataToVerify = `${payload.url}|${payload.timestamp}`;
-          const isValid = await verifySignature(
-            dataToVerify,
-            signature,
-            cacheUtils.getPassword()
-          );
+          // Verify the token
+          const isValid = verifyToken(token);
 
           if (isValid) {
+            logger.info("Token verified successfully");
             socketMessageDispatcher(ws, message, false);
           } else {
-            notifications.showMessage("Error", "You entered the wrong password");
-            console.error("Invalid signature");
-            ws.send(JSON.stringify({ error: "Invalid signature" }));
+            logger.warn("Invalid token received");
+            notifications.showMessage(
+              "Authentication Failed",
+              "Invalid token. Please check your extension settings."
+            );
+            console.error("Invalid token");
+            ws.send(
+              JSON.stringify({
+                error: "Invalid token",
+                message:
+                  "Authentication failed. Please ensure your extension has the correct token configured.",
+              })
+            );
           }
         } catch (error) {
           console.error("Error processing message:", error);
@@ -67,22 +73,24 @@ function startService() {
     wss.on("open", () => console.log("socket open"));
     wss.on("error", console.error);
     notifications.showMessage("Thunderclone", "Server started");
+    cacheUtils.setServiceRunning(true);
   }
 }
 
 function stopService() {
   console.log("wss", wss);
   if (wss) {
-    notifications.showMessage("Instaclone", "Server stopped");
+    notifications.showMessage("Thunderclone", "Server stopped");
     wss.close();
     wss = null;
+    cacheUtils.setServiceRunning(false);
   }
 }
 
 const networkingUtils = {
   startService,
   stopService,
-  verifySignature,
+  verifyToken,
 };
 
 export default networkingUtils;
